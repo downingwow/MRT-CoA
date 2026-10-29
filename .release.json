@@ -1,6 +1,6 @@
 {
   "version": "v0.18",
-  "prerelease": true,
+  "prerelease": false,
   "folders": [
     "MRT"
   ]
