@@ -1,0 +1,82 @@
+name: Package and publish addon release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+    tags:
+      - 'v*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+      - name: Verify addon files and build ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="${{ github.event.repository.name }}"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="$GITHUB_REF_NAME"
+          else
+            VERSION="auto-${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:8}"
+          fi
+          mkdir -p dist
+          case "$REPO" in
+            MRT-CoA)
+              dirs=(MRT)
+              ;;
+            Questie-X)
+              mapfile -t dirs < <(find . -maxdepth 1 -type d -name 'Questie-X*' -printf '%f\n' | sort)
+              test -d Questie-X || { echo "::error::Missing Questie-X"; exit 1; }
+              ;;
+            LootCollector)
+              dirs=(LootCollector LootCollector_CustomImport LootCollector_StarterDB)
+              ;;
+            DBM-CoA)
+              mapfile -t dirs < <(find . -maxdepth 1 -type d -name 'DBM-*' -printf '%f\n' | sort)
+              ;;
+            *)
+              echo "::error::Unknown addon repository: $REPO"
+              exit 1
+              ;;
+          esac
+          test "${#dirs[@]}" -gt 0 || { echo "::error::No addon directories"; exit 1; }
+          for dir in "${dirs[@]}"; do
+            test -d "$dir" || { echo "::error::Missing $dir"; exit 1; }
+            test -n "$(find "$dir" -maxdepth 1 -name '*.toc' -print -quit)" || { echo "::error::Missing .toc in $dir"; exit 1; }
+          done
+          if [ "$REPO" = DBM-CoA ]; then
+            for dir in DBM-Core DBM-GUI DBM-CoA-Learner DBM-CoA-Observer; do
+              test -d "$dir" || { echo "::error::Required DBM folder missing: $dir"; exit 1; }
+            done
+          fi
+          zip -qr "dist/${REPO}-${VERSION}.zip" "${dirs[@]}" -x '*/.DS_Store' '*/Thumbs.db'
+      - name: Publish versioned GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="${{ github.event.repository.name }}"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="$GITHUB_REF_NAME"
+          else
+            VERSION="auto-${GITHUB_RUN_NUMBER}-${GITHUB_SHA:0:8}"
+          fi
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            gh release create "$VERSION" "dist/${REPO}-${VERSION}.zip" --title "${REPO} ${VERSION}" --generate-notes --verify-tag
+          else
+            gh release create "$VERSION" "dist/${REPO}-${VERSION}.zip" --target "$GITHUB_SHA" --title "${REPO} automatic build ${GITHUB_RUN_NUMBER}" --generate-notes --prerelease --latest=false
+          fi

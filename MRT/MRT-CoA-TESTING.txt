@@ -1,0 +1,1 @@
+v0.10: Raid Cooldowns now lists 21 Conquest class categories and their 70 specs. Original Wrath cooldown spell rows remain in All spells until a verified Conquest ability database is integrated. Test category clicks and Add Spell dropdown; report Lua errors.
