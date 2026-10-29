@@ -1,0 +1,1 @@
+MRT-CoA v0.12 — Uncle Bone\nCommands: /mrtcoascanbook, /mrtcoaspells\nIf commands are unavailable, enable MRT in AddOns and inspect Lua errors on login.\nThis build fixes registration/load order and rebrands the changelog/version.\n

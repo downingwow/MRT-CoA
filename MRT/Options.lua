@@ -206,6 +206,167 @@ function MRT.Options:RemoveIcon(moduleName)
 	end
 end
 
+
+-- MRT-CoA: register spellbook controls directly with the main options list.
+-- This is intentionally in Options.lua, not a late-loaded standalone panel.
+do
+ local page = MRT.Options:Add("CoASpellbook", "|cff33ff99CoA Spellbook|r")
+ local title = page:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
+ title:SetPoint("TOPLEFT",page,"TOPLEFT",24,-30)
+ title:SetText("Conquest Reborn Spellbook")
+ local info = page:CreateFontString(nil,"OVERLAY","GameFontNormal")
+ info:SetPoint("TOPLEFT",title,"BOTTOMLEFT",0,-20)
+ info:SetWidth(580)
+ info:SetJustifyH("LEFT")
+ info:SetText("Scan your learned spells for the current class and specialization. Spell IDs are read from the game client; cooldown values are observations, not verified base cooldowns.")
+ local status = page:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+ status:SetPoint("TOPLEFT",info,"BOTTOMLEFT",0,-75)
+ status:SetWidth(600)
+ status:SetJustifyH("LEFT")
+ status:SetText("Ready to scan")
+ local summary = page:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+ summary:SetPoint("TOPLEFT",status,"BOTTOMLEFT",0,-20)
+ summary:SetWidth(600)
+ summary:SetJustifyH("LEFT")
+ local function refresh()
+  local db=_G.MRTCoASpells
+  local key=(UnitName("player") or "Unknown").."-"..(GetRealmName() or "Unknown")
+  local char=db and db.characters and db.characters[key]
+  local specs,spells=0,0
+  if char and char.specs then
+   for _,entry in pairs(char.specs) do
+    specs=specs+1
+    if entry.spells then spells=spells+#entry.spells end
+   end
+  end
+  summary:SetText("Saved: "..specs.." specialization(s), "..spells.." learned spells")
+ end
+ local scan=CreateFrame("Button",nil,page,"UIPanelButtonTemplate")
+ scan:SetSize(180,28)
+ scan:SetPoint("TOPLEFT",info,"BOTTOMLEFT",0,-25)
+ scan:SetText("Scan My Spellbook")
+ scan:SetScript("OnClick",function()
+  -- Built-in scan: no dependency on slash commands or external scanner registration.
+  local function directScan()
+   local className,classToken=UnitClass("player")
+   local specID=0
+   if C_CharacterAdvancement and type(C_CharacterAdvancement.GetActiveChrSpec)=="function" then
+    local success,value=pcall(C_CharacterAdvancement.GetActiveChrSpec)
+    if success and type(value)=="number" then specID=value end
+   end
+   local spells,seen={},{}
+   local scanned,named,ids=0,0,0
+   local book=BOOKTYPE_SPELL or "spell"
+   local function addSpell(i)
+    scanned=scanned+1
+    local name,rank,spellID,icon
+    if GetSpellName then
+     local ok,n,r=pcall(GetSpellName,i,book)
+     if ok then name,rank=n,r end
+    end
+    if GetSpellBookItemInfo then
+     local ok,kind,id=pcall(GetSpellBookItemInfo,i,book)
+     if ok and type(id)=="number" and id>0 then spellID=id end
+    end
+    if GetSpellLink then
+     local ok,link=pcall(GetSpellLink,i,book)
+     if ok and type(link)=="string" then spellID=tonumber(link:match("spell:(%d+)")) or spellID end
+    end
+    if not name and spellID and GetSpellInfo then name=GetSpellInfo(spellID) end
+    if type(name)=="string" and name~="" then
+     named=named+1
+     if GetSpellInfo then
+      local _,_,tex=GetSpellInfo(spellID or name)
+      icon=tex
+     end
+     if not icon and GetSpellTexture then
+      local ok,tex=pcall(GetSpellTexture,i,book)
+      if ok then icon=tex end
+     end
+     if spellID then ids=ids+1 end
+     local key=spellID and tostring(spellID) or (name..":"..tostring(rank or ""))
+     if not seen[key] then
+      seen[key]=true
+      spells[#spells+1]={id=spellID,name=name,rank=rank,icon=icon,spellbookIndex=i}
+     end
+    end
+   end
+   local numTabs=GetNumSpellTabs and GetNumSpellTabs() or 0
+   local tabSlots=0
+   if GetSpellTabInfo then
+    for tab=1,numTabs do
+     local ok,_,_,offset,count=pcall(GetSpellTabInfo,tab)
+     if ok and type(offset)=="number" and type(count)=="number" then
+      for i=offset+1,math.min(offset+count,offset+1000) do
+       tabSlots=tabSlots+1
+       addSpell(i)
+      end
+     end
+    end
+   end
+   -- The modified client may return zero/invalid tabs, or expose entries outside them.
+   -- Always probe actual spellbook slots if the tab pass found no named spells.
+   local probed=0
+   if #spells==0 then
+    local lastFound=0
+    for i=1,800 do
+     local n,link,kind,id
+     if GetSpellName then
+      local ok,v=pcall(GetSpellName,i,book)
+      if ok then n=v end
+     end
+     if GetSpellLink then
+      local ok,v=pcall(GetSpellLink,i,book)
+      if ok then link=v end
+     end
+     if GetSpellBookItemInfo then
+      local ok,k,v=pcall(GetSpellBookItemInfo,i,book)
+      if ok then kind,id=k,v end
+     end
+     if n or link or (type(id)=="number" and id>0) then
+      lastFound=i
+      addSpell(i)
+     end
+     probed=i
+     if i>100 and i-lastFound>100 then break end
+    end
+   end
+   table.sort(spells,function(a,b) return a.name<b.name end)
+   MRTCoASpells=MRTCoASpells or {version=1,characters={}}
+   MRTCoASpells.characters=MRTCoASpells.characters or {}
+   local key=(UnitName("player") or "Unknown").."-"..(GetRealmName() or "Unknown")
+   local character=MRTCoASpells.characters[key] or {specs={}}
+   character.specs=character.specs or {}
+   character.className=className
+   character.familyToken=classToken
+   character.lastSpec=specID
+   -- Never replace previously collected spells with an empty scan.
+   if #spells>0 then
+    character.specs[tostring(specID)]={specID=specID,familyToken=classToken,spells=spells}
+   end
+   MRTCoASpells.characters[key]=character
+   return {spells=spells,tabs=numTabs,scanned=scanned,named=named,ids=ids,tabSlots=tabSlots,probed=probed,hasName=GetSpellName~=nil,hasInfo=GetSpellBookItemInfo~=nil,hasLink=GetSpellLink~=nil}
+  end
+  local ok,result=pcall(directScan)
+  if not ok then status:SetText("Scan failed: "..tostring(result))
+  else
+   status:SetText("Scan: "..#result.spells.." spells; "..result.scanned.." reads, "..result.tabs.." tabs, "..result.ids.." IDs")
+   if #result.spells==0 then
+    local report="MRT-CoA spellbook diagnostics: tabs="..result.tabs..", tabSlots="..result.tabSlots..", probed="..result.probed..", GetSpellName="..tostring(result.hasName)..", GetSpellBookItemInfo="..tostring(result.hasInfo)..", GetSpellLink="..tostring(result.hasLink)
+    if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(report) end
+    status:SetText("0 spells: diagnostics printed to chat; existing saved data preserved")
+   end
+  end
+  refresh()
+ end)
+ local refreshButton=CreateFrame("Button",nil,page,"UIPanelButtonTemplate")
+ refreshButton:SetSize(145,28)
+ refreshButton:SetPoint("LEFT",scan,"RIGHT",14,0)
+ refreshButton:SetText("Refresh Saved Data")
+ refreshButton:SetScript("OnClick",refresh)
+ page:SetScript("OnShow",refresh)
+end
+
 local OptionsFrame = MRT.Options:Add("Method Raid Tools","|cffffa800Method Raid Tools|r")
 Options.modulesList:SetListValue(1)
 Options.modulesList.selected = 1

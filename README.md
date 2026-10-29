@@ -1,11 +1,29 @@
-# MRT-CoA
+# MRT-CoA — Raid Coordination for Conquest Reborn
 
-Method Raid Tools adaptation for Ascension Conquest Reborn (WoW 3.3.5a).
+Method Raid Tools adapted for the legacy Ascension Conquest of Azeroth client. It brings a raid toolbox into one addon: shared raid notes, cooldown and interrupt displays, reminders, ready/raid checks, group and invitation tools, marks, timers, attendance and encounter/loot history modules.
 
-Source baseline: v0.10 cooldown class browser. This remains an experimental adaptation; importing the source does not add further custom cooldown spell coverage.
+## CoA adaptation
 
-Download installable ZIPs from [Releases](https://github.com/downingwow/MRT-CoA/releases). Extract the MRT folder into Interface/AddOns.
+- Legacy-client API compatibility helpers and custom-class support.
+- A CoA cooldown/class browser and saved spell records.
+- Spellbook scanning tools for investigating custom classes and spells.
+- UI and load-order changes for the 3.3.5a client.
 
-Updates committed to main automatically publish preview ZIP releases. Tags starting with v publish versioned releases. Maintainer: Uncle Bone — https://github.com/downingwow
+The current **v0.18 spellbook-probe build is experimental**. Inclusion of a module does not guarantee its modern-client behavior is supported. Custom cooldown coverage depends on validated spell data; a spellbook scan is not a finished cooldown database. DragonUI need not be disabled; default UI behavior remains a supported testing path.
 
-Bundled third-party license notices are retained in the source.
+## Installation and commands
+
+Download the installable ZIP from [Releases](https://github.com/downingwow/MRT-CoA/releases). Extract the `MRT` folder directly into `Interface/AddOns`, replacing the previous folder after backing it up. Keep `VMRT` and `MRTCoASpells` SavedVariables.
+
+- `/mrt` — raid tools and settings.
+- `/mrtcoascanbook` or `/mrtbook` — scan the spellbook.
+- `/mrtcoaspells` or `/mrtspelllist` — list saved spell records.
+- `/mrtcoatools` — CoA tools.
+
+Based on Method Raid Tools by ExoJdi and its contributors. Modern MRT features remain subject to legacy-client limitations.
+
+## Compatibility and support
+
+Target: Ascension Conquest of Azeroth / Conquest Reborn, legacy WoW 3.3.5a (Interface 30300). Source and package checks do not establish live realm compatibility. Report the addon version, UI addons, and full Lua error when filing an issue. Preserve your WTF SavedVariables when updating.
+
+Maintainer: **Uncle Bone** · [GitHub support](https://github.com/downingwow). This is a community-maintained adaptation. Original authors retain their credits; bundled license and third-party attribution notices remain applicable.
