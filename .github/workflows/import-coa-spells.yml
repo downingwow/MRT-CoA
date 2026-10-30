@@ -20,6 +20,7 @@ jobs:
           python-version: '3.11'
       - name: Retrieve published CoA-Research index
         run: curl --fail --location --retry 3 -o /tmp/coa-spells.json https://raw.githubusercontent.com/downingwow/CoA-Research/main/site/data/spell-search-index.json
+      # Preserve shard filenames while serializing individual spell names.
       - name: Generate partitioned Lua 5.1 data
         run: python tools/build_coa_spell_lua.py /tmp/coa-spells.json MRT/CoASpellData
       - name: Insert generated files into MRT load order
