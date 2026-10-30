@@ -2,7 +2,8 @@
 -- Evidence: MRT/CoACooldownDB.lua, sourced from an Ascension archive.
 -- This bridge does NOT assert current Conquest Reborn cooldown correctness.
 local A = {}
-local db = _G.MRT_CoACooldownDB or {}\nlocal archive = _G.MRT_CoASpellArchiveBuckets or {}
+local db = _G.MRT_CoACooldownDB or {}
+local archive = _G.MRT_CoASpellArchiveBuckets or {}
 A.schemaVersion = 1
 A.source = "Archived Ascension spell recovery-time reference"
 A.currentClientVerified = false
@@ -12,7 +13,12 @@ end
 function A.GetSpell(id)
  if not validID(id) then return nil end
  local r = db[id]
- if type(r) ~= "table" then\n  local bucket = archive[math.floor(id / 1000)]\n  local item = bucket and bucket[id]\n  if not item then return nil end\n  return {id=id,name=item[1],classIds=item[2],candidateSpecIds=item[3],archivedCooldownMs=item[4],hasArchivedDefinition=item[5],cooldownSource="coa-research-archive",currentClientVerified=false}\n end
+ if type(r) ~= "table" then
+  local bucket = archive[math.floor(id / 1000)]
+  local item = bucket and bucket[id]
+  if not item then return nil end
+  return {id=id,name=item[1],classIds=item[2],candidateSpecIds=item[3],archivedCooldownMs=item[4],hasArchivedDefinition=item[5],cooldownSource="coa-research-archive",currentClientVerified=false}
+ end
  return {
   id = id,
   name = type(r[2]) == "string" and r[2] or nil,
@@ -26,7 +32,21 @@ function A.Search(query, classKey, limit)
  local q = tostring(query or ""):lower()
  local filter = classKey and tostring(classKey):lower() or nil
  local max = math.min(math.max(tonumber(limit) or 50, 1), 200)
- local out = {}\n local seen = {}\n for _,bucket in pairs(archive) do\n  for id,item in pairs(bucket) do\n   local name = tostring(item[1] or "")\n   local classMatch = not filter\n   if filter then\n    for _,cid in ipairs(item[2] or {}) do if tostring(cid) == filter then classMatch=true;break end end\n   end\n   if classMatch and (q == "" or tostring(id):find(q,1,true) or name:lower():find(q,1,true)) then\n    out[#out+1] = A.GetSpell(id)\n    seen[id] = true\n   end\n  end\n end
+ local out = {}
+ local seen = {}
+ for _,bucket in pairs(archive) do
+  for id,item in pairs(bucket) do
+   local name = tostring(item[1] or "")
+   local classMatch = not filter
+   if filter then
+    for _,cid in ipairs(item[2] or {}) do if tostring(cid) == filter then classMatch=true;break end end
+   end
+   if classMatch and (q == "" or tostring(id):find(q,1,true) or name:lower():find(q,1,true)) then
+    out[#out+1] = A.GetSpell(id)
+    seen[id] = true
+   end
+  end
+ end
  for id, r in pairs(db) do
   if validID(id) and type(r) == "table" and not seen[id] then
    local name = tostring(r[2] or "")
