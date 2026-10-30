@@ -1,0 +1,68 @@
+name: Import full CoA-Research spell archive
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-coa-spells.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Retrieve published CoA-Research index
+        run: curl --fail --location --retry 3 -o /tmp/coa-spells.json https://raw.githubusercontent.com/downingwow/CoA-Research/main/site/data/spell-search-index.json
+      - name: Generate partitioned Lua 5.1 data
+        run: python tools/build_coa_spell_lua.py /tmp/coa-spells.json MRT/CoASpellData
+      - name: Insert generated files into MRT load order
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          toc=Path("MRT/MRT.toc")
+          text=toc.read_text(encoding="utf-8")
+          begin="-- BEGIN GENERATED COA SPELL DATA"
+          end="-- END GENERATED COA SPELL DATA"
+          if begin in text:
+              text=text[:text.index(begin)]+text[text.index(end)+len(end):]
+          manifest=Path("MRT/CoASpellData/CoASpellData.toc.inc").read_text(encoding="utf-8").strip()
+          section=begin+"\n"+manifest+"\n"+end
+          anchor="CoASpellReference.lua"
+          assert anchor in text
+          text=text.replace(anchor, "CoASpellDataInit.lua\n"+section+"\n"+anchor)
+          toc.write_text(text,encoding="utf-8")
+          PY
+      - name: Validate all 9656 IDs and load order
+        run: |
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+          m=json.loads(Path("MRT/CoASpellData/manifest.json").read_text())
+          assert m["spellCount"]==9656,m
+          toc=Path("MRT/MRT.toc").read_text()
+          assert toc.index("CoASpellDataInit.lua")<toc.index("CoASpellData_")<toc.index("CoASpellReference.lua")
+          ids=[]
+          for file in m["files"]:
+              p=Path("MRT/CoASpellData")/file
+              assert p.exists(),p
+              assert "CoASpellData\\"+file in toc
+              ids.extend(map(int,re.findall(r"^ \[(\d+)\]=",p.read_text(),re.M)))
+          assert len(ids)==9656 and len(set(ids))==9656,(len(ids),len(set(ids)))
+          print("Validated",len(ids),"unique spell IDs across",len(m["files"]),"Lua shards")
+          PY
+      - name: Commit generated MRT spell database
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MRT/MRT.toc MRT/CoASpellData
+          if ! git diff --cached --quiet; then
+            git commit -m "data: bundle all 9656 CoA-Research spell references for MRT"
+            git push
+          fi
