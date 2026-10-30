@@ -38,11 +38,11 @@ def generate(source, output):
         for r in sorted(records, key=lambda x: x["id"]):
             class_ids = ",".join(str(i) for i in r.get("c",[]) if type(i) is int)
             spec_ids = ",".join(str(i) for i in r.get("s",[]) if type(i) is int)
-            name = lua_string(r.get("n") or "")
+            spell_name = lua_string(r.get("n") or "")
             # Do not package descriptions here: avoid heavy 3.3.5a startup memory use.
             cd = r.get("cd")
             cdstr = str(cd) if type(cd) is int else "nil"
-            lines.append(" [" + str(r["id"]) + "]={" + name + ",{" + class_ids + "},{" + spec_ids + "}," + cdstr + "," + ("true" if r.get("defined") else "false") + "},")
+            lines.append(" [" + str(r["id"]) + "]={" + spell_name + ",{" + class_ids + "},{" + spec_ids + "}," + cdstr + "," + ("true" if r.get("defined") else "false") + "},")
         lines.append("}")
         (output/name).write_text("\n".join(lines)+"\n", encoding="utf-8")
     manifest = {"schemaVersion":1,"source":"CoA-Research/site/data/spell-search-index.json",
