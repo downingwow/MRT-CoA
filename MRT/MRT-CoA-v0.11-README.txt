@@ -1,0 +1,8 @@
+MRT-CoA v0.11: spellbook discovery foundation
+
+/mrtcoascanbook records learned spell IDs and names for the current character and specialization.
+/mrtcoaspells lists spells with a cooldown currently active (not base cooldowns).
+Data is stored in MRTCoASpells SavedVariables across sessions. Scan each specialization separately.
+No custom raid cooldown durations or remote roster sync are claimed in this release.
+This is a functional data collection build; the original Wrath raid cooldown database remains in place.
+Maintainer: Uncle Bone, https://github.com/downingwow/MRT-CoA

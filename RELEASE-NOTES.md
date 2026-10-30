@@ -1,11 +1,12 @@
-# MRT-CoA v0.18
+# MRT-CoA v0.20 — Cooldown integration
 
-Legacy spellbook probe and CoA tools.
+- Imports 568 castable, class-assigned spells with positive reference recovery values from the supplied CoA databank.
+- Adds a CoA Spellbook settings panel and an observed-spell cooldown window.
+- Scan My Spellbook, then Open CoA Cooldowns; `/mrtcoacd` toggles the window.
+- Displays learned/scanned spells rather than treating the entire archive as the player's spellbook.
 
-**Experimental prerelease: in-game validation is pending.**
+Reference recovery values may differ from live cooldowns due to talents, modifiers and server changes. This is an experimental integration; automatic raid-roster cooldown tracking and complete custom-class coverage are not claimed. Previously reported in-game functionality problems remain unverified by this publishing pass.
 
-
-Install the addon folders from the attached ZIP side by side in `Interface/AddOns`. Preserve WTF/SavedVariables. See the repository README for features, commands, dependencies and limitations.
+Install the MRT folder directly into Interface/AddOns. Retain VMRT and MRTCoASpells SavedVariables.
 
 Maintainer: Uncle Bone — https://github.com/downingwow
-Original licenses and attribution are preserved.

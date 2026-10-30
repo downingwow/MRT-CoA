@@ -41,7 +41,8 @@ local function scan()
      if name then
       seen[id]=true
       local start,duration,enabled=GetSpellCooldown(id)
-      spells[#spells+1]={id=id,name=name,icon=icon,observedCooldown=type(duration)=="number" and duration or nil,enabled=enabled}
+      local ref=_G.MRT_CoACooldownDB and _G.MRT_CoACooldownDB[id]
+      spells[#spells+1]={id=id,name=name,icon=icon,observedCooldown=type(duration)=="number" and duration or nil,enabled=enabled,referenceCooldownMs=ref and ref[1] or nil,referenceClasses=ref and ref[3] or nil}
      end
     end
    end

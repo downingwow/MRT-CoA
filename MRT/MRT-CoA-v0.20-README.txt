@@ -1,0 +1,6 @@
+MRT-CoA v0.20 - Ascension cooldown database integration
+Source: user-provided ascension-data-main(1).zip, CoA databank palette/spells.jsonl.gz
+568 castable, class-assigned spells with positive recovery values imported.
+The reference recovery values may differ from actual live cooldowns due to talents, server changes and modifiers.
+Use MRT settings > CoA Spellbook > Scan My Spellbook, then Open CoA Cooldowns; /mrtcoacd toggles window.
+Only learned scanned spells are displayed. No automatic raid roster cooldown tracking is claimed.

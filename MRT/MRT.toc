@@ -4,13 +4,15 @@
 ## Notes: Method Raid Tools for 3.3.5a
 ## X-Website: https://github.com/downingwow/MRT-CoA
 ## SavedVariables: VMRT, MRTCoASpells
-## Version: v0.18-CoA
+## Version: v0.20-CoA
 ## AddonCompartmentFunc: MRT_MinimapClickFunction
 ## IconTexture: Interface\AddOns\MRT\media\MiniMap.tga
 Compat335.lua
 CoAClasses.lua
 core.lua
+CoACooldownDB.lua
 CoASpellScan.lua
+CoACooldownTracker.lua
 Functions.lua
 embeds.xml
 ExLib.lua
@@ -55,4 +57,5 @@ LootLink.lua
 WAChecker.lua
 Bindings.lua
 Profiles.lua
+CoASpellPanel.lua
 Changelog.lua
