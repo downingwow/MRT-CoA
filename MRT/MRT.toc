@@ -11,6 +11,7 @@ Compat335.lua
 CoAClasses.lua
 core.lua
 CoACooldownDB.lua
+CoASpellReference.lua
 CoASpellScan.lua
 CoACooldownTracker.lua
 Functions.lua
