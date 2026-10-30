@@ -12,6 +12,11 @@ local function validID(id)
 end
 function A.GetSpell(id)
  if not validID(id) then return nil end
+ local bucket = archive[math.floor(id / 1000)]
+ local item = bucket and bucket[id]
+ if item then
+  return {id=id,name=item[1],classIds=item[2],candidateSpecIds=item[3],archivedCooldownMs=item[4],hasArchivedDefinition=item[5],cooldownSource="coa-research-archive",currentClientVerified=false}
+ end
  local r = db[id]
  if type(r) ~= "table" then
   local bucket = archive[math.floor(id / 1000)]
