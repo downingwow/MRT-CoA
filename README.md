@@ -1,6 +1,6 @@
 # MRT-CoA — Raid Coordination for Conquest Reborn
 
-> **[⬇ Download v0.20]( https://github.com/downingwow/MRT-CoA/releases/download/v0.20/MRT-CoA-v0.20.zip )**
+> **[⬇ Download v0.20](https://github.com/downingwow/MRT-CoA/releases/download/v0.20/MRT-CoA-v0.20.zip)**
 
 
 ## Current release
